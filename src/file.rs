@@ -11,13 +11,26 @@ pub struct FileHandle {
 }
 
 impl FileHandle {
+    /// Opens a handle for the file at path.
+    ///
+    /// The kFileRead mode opens a file in the game pdx, while kFileReadData searches
+    /// the game’s data folder; to search the data folder first then fall back on the game pdx,
+    /// use the bitwise combination kFileRead|kFileReadData.
+    /// kFileWrite and kFileAppend always write to the data folder.
+    ///
+    /// The function returns Err if the path contains a \0 byte (see [`CString::new`]).
+    /// The function returns Err if the file at path cannot be opened, and will log the error to the console.
+    /// The filesystem has a limit of 64 simultaneous open files.
     pub fn open(path: &str, mode: FileOptions) -> io::Result<Self> {
         let c_path = CString::new(path)
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "Invalid path"))?;
         let handle = unsafe { playdate_sys::api!(file).open.unwrap()(c_path.as_ptr(), mode) };
         if handle.is_null() {
+            let message = unsafe { playdate_sys::api!(file).geterr.unwrap()() };
+            unsafe { playdate_sys::api!(system).logToConsole.unwrap()(message) };
+
             Err(io::Error::new(
-                io::ErrorKind::NotFound,
+                io::ErrorKind::Other,
                 "Failed to open file",
             ))
         } else {
