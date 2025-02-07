@@ -30,13 +30,40 @@ impl FileHandle {
             let message = unsafe { playdate_sys::api!(file).geterr.unwrap()() };
             unsafe { playdate_sys::api!(system).logToConsole.unwrap()(message) };
 
-            Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Failed to open file",
-            ))
+            Err(io::Error::new(io::ErrorKind::Other, "Failed to open file"))
         } else {
             Ok(FileHandle { handle })
         }
+    }
+
+    /// Opens a handle for a file at path.
+    /// Shorthand for [`Self::open`] with kFileRead and kFileReadData
+    #[inline]
+    pub fn read_only(path: &str) -> io::Result<Self> {
+        Self::open(path, FileOptions::kFileRead | FileOptions::kFileReadData)
+    }
+
+    /// Opens a handle for a file at path.
+    /// Shorthand for [`Self::open`] with kFileWrite (and kFileAppend if append = true)
+    #[inline]
+    pub fn write_only(path: &str, append: bool) -> io::Result<Self> {
+        Self::open(
+            path,
+            FileOptions::kFileWrite | (FileOptions(FileOptions::kFileAppend.0 * append as i32)),
+        )
+    }
+
+    /// Opens a handle for a file at path.
+    /// Shorthand for [`Self::open`] with kFileRead, kFileReadData, kFileWrite (and kFileAppend if append = true)
+    #[inline]
+    pub fn read_write(path: &str, append: bool) -> io::Result<Self> {
+        Self::open(
+            path,
+            FileOptions::kFileRead
+                | FileOptions::kFileReadData
+                | FileOptions::kFileWrite
+                | (FileOptions(FileOptions::kFileAppend.0 * append as i32)),
+        )
     }
 }
 
