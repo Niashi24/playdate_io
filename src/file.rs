@@ -47,22 +47,26 @@ impl FileHandle {
     /// Shorthand for [`Self::open`] with kFileWrite (and kFileAppend if append = true)
     #[inline]
     pub fn write_only(path: &str, append: bool) -> io::Result<Self> {
-        Self::open(
-            path,
-            FileOptions::kFileWrite | (FileOptions(FileOptions::kFileAppend.0 * append as i32)),
-        )
+        let append = if append {
+            FileOptions::kFileAppend
+        } else {
+            FileOptions(0)
+        };
+        Self::open(path, FileOptions::kFileWrite | append)
     }
 
     /// Opens a handle for a file at path.
     /// Shorthand for [`Self::open`] with kFileRead, kFileReadData, kFileWrite (and kFileAppend if append = true)
     #[inline]
     pub fn read_write(path: &str, append: bool) -> io::Result<Self> {
+        let append = if append {
+            FileOptions::kFileAppend
+        } else {
+            FileOptions(0)
+        };
         Self::open(
             path,
-            FileOptions::kFileRead
-                | FileOptions::kFileReadData
-                | FileOptions::kFileWrite
-                | (FileOptions(FileOptions::kFileAppend.0 * append as i32)),
+            FileOptions::kFileRead | FileOptions::kFileReadData | FileOptions::kFileWrite | append,
         )
     }
 }

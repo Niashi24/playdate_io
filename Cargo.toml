@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-playdate = { git = "https://github.com/boozook/playdate", rev = "66da849" }
+playdate = { git = "https://github.com/boozook/playdate" }
 no_std_io2 = "0.9.0"
